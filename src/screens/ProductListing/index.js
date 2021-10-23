@@ -1,94 +1,83 @@
 import React, { useState } from 'react';
-import { FlatList, StyleSheet, Text, View, SafeAreaView, Image, ActivityIndicator } from 'react-native';
-import Incrementer from '../../components/Incrementer';
+import { FlatList, StyleSheet, Text, View, SafeAreaView, ActivityIndicator, Alert } from 'react-native';
 const url = 'https://my-json-server.typicode.com/benirvingplt/products/products'
 import DropDown from '../../components/DropDown';
+import ListItem from '../../components/listItem';
 
-const colors = [
-    {
-        label: 'Black',
-        value: 'Black',
-    },
-    {
-        label: 'Red',
-        value: 'Red',
-    },
-    {
-        label: 'Pink',
-        value: 'Pink',
-    },
-    {
-        label: 'Stone',
-        value: 'Stone'
-    }
-];
 
 export default function ProductListing() {
     const [products, SetProducts] = useState([])
-    const [quantity, SetQuantity] = useState({})
+    const [cart, SetCart] = useState({})
     const [loaded, SetLoaded] = useState(false)
-    const [selectedValue, setSelectedValue] = useState();
-    const [copyData, setCopyData] = useState([])
+    const [colors, setColors] = useState([])
 
     React.useEffect(() => {
         fetchProducts()
     }, [])
 
-    async function fetchProducts() {
+    async function fetchProducts(color) {
         try {
-            let response = await fetch(url)
+            let api_url = color ? `${url}?colour=${color}` : url
+            let response = await fetch(api_url)
             let products = await response.json()
             SetProducts(products)
-            setCopyData(products)
+            if (!color) {
+                let colors_array = []
+                products.forEach(ele => {
+                    let item = {
+                        value: ele.colour,
+                        label: ele.colour
+                    }
+                    if (!colors_array.some(value => value.label === item.label)) {
+                        colors_array.push(item)
+                    }
+                })
+                setColors(colors_array)
+            }
             SetLoaded(true)
         } catch (error) {
-
+            Alert.alert(error.message)
         }
     }
 
     function addProduct(product) {
         let q = {
-            ...quantity
+            ...cart
         }
         if (q[product.id]) {
-            q[product.id].quantity = quantity[product.id] ? quantity[product.id]?.quantity + 1 : 1
+            q[product.id].quantity = cart[product.id] ? cart[product.id]?.quantity + 1 : 1
         } else {
             q[product.id] = {
                 quantity: 1,
                 price: product.price
             }
         }
-        SetQuantity(q)
+        SetCart(q)
     }
 
     function removeProduct(product, dlt) {
         let q = {
-            ...quantity
+            ...cart
         }
         if (dlt) {
             q[product.id] = {
-                ...quantity[product.id],
+                ...cart[product.id],
                 quantity: 0
             }
         } else if (q[product.id].quantity > 0) {
-            q[product.id].quantity = quantity[product.id]?.quantity - 1
+            q[product.id].quantity = cart[product.id]?.quantity - 1
         }
 
-        SetQuantity(q)
+        SetCart(q)
     }
 
-    let memoizedQuantity = React.useMemo(function () {
-        return Object.values(quantity).map(i => i.price * i.quantity).reduce((a, b) => a + b, 0)
-    }, [quantity])
+    let total = React.useMemo(function () {
+        return Object.values(cart).map(i => i.price * i.quantity).reduce((a, b) => a + b, 0)
+    }, [cart])
+
 
     function onChange(value) {
-        if (value) {
-            const list = copyData.filter(p => p.colour == value);
-            SetProducts(list)
-        } else {
-            SetProducts(copyData)
-        }
-
+        fetchProducts(value)
     }
 
     return (
@@ -98,24 +87,14 @@ export default function ProductListing() {
                 label='Filter by color'
                 data={colors}
                 onChange={onChange}
-                selectedValue={selectedValue}
                 containerStyle={{ marginVertical: 30 }}
             />
             <FlatList
                 data={products}
                 keyExtractor={(item, _) => `product_${item.id}`}
-                renderItem={({ item, index }) => (
-                    <View key={index} style={styles.listItem}>
-                        <Image source={{ uri: item.img }} style={{ width: 100, backgroundColor: "#ddd" }} resizeMode='contain' />
-                        <View style={{ flex: 1, marginLeft: 10, padding: 5 }}>
-                            <Text>{item.name}</Text>
-                            <Text>{item.price}$</Text>
-                            <Incrementer quantity={quantity[item.id]} addProduct={() => addProduct(item)} removeProduct={(dlt) => removeProduct(item, dlt)} />
-                        </View>
-                    </View>
-                )}
+                renderItem={({ item }) => <ListItem item={item} addProduct={addProduct} removeProduct={removeProduct} cart={cart} />}
                 ListFooterComponent={() => <View style={styles.totalContainer}>
-                    <Text>Total: ${memoizedQuantity.toFixed(2)}</Text>
+                    <Text>Total: ${total.toFixed(2)}</Text>
                 </View>}
                 ItemSeparatorComponent={() => <View style={{ height: 10, flex: 1 }} />}
             />
@@ -128,15 +107,5 @@ const styles = StyleSheet.create({
         flex: 1,
         backgroundColor: '#fff',
     },
-    listItem: {
-        flex: 1,
-        flexDirection: 'row',
-        borderColor: '#ddd',
-        borderWidth: 1,
-        borderRadius: 10,
-        marginHorizontal: 10,
-        overflow: 'hidden',
-    },
-    row: { flexDirection: 'row', alignItems: 'center' },
     totalContainer: { margin: 20, padding: 10, alignItems: 'center', borderTopWidth: 1, borderColor: '#ddd' }
 });

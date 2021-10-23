@@ -12,12 +12,12 @@ const DropDown = (props) => {
     }
 
     const {
-        data,
-        onChange,
-        selectedValue,
+        data = [],
+        onChange = () => { },
+        selectedValue = '',
         disabled = false,
-        label,
-        containerStyle,
+        label = '',
+        containerStyle = {},
     } = props
 
     const { root, labelStyle } = styles
@@ -48,8 +48,6 @@ const DropDown = (props) => {
         </View>
     )
 }
-
-export default DropDown
 
 const styles = StyleSheet.create({
     root: {
@@ -102,3 +100,5 @@ const pickerStyles = StyleSheet.create({
         right: 12,
     },
 })
+
+export default DropDown

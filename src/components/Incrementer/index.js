@@ -6,6 +6,7 @@ export default function Incrementer({ quantity, addProduct, removeProduct }) {
         <View style={{ marginTop: 10, alignItems: 'center' }}>
             <View style={[styles.row]}>
                 <TouchableOpacity
+                    activeOpacity={0.6}
                     onPress={() => { removeProduct() }}
                     style={styles.decrementButton}>
                     <Text
@@ -17,6 +18,7 @@ export default function Incrementer({ quantity, addProduct, removeProduct }) {
                     <Text>{quantity?.quantity ?? 0}</Text>
                 </View>
                 <TouchableOpacity
+                    activeOpacity={0.6}
                     onPress={() => { addProduct() }}
                     style={styles.incrementButton}>
                     <Text>
@@ -24,7 +26,7 @@ export default function Incrementer({ quantity, addProduct, removeProduct }) {
                     </Text>
                 </TouchableOpacity>
             </View>
-            <TouchableOpacity style={{ padding: 5 }} onPress={() => { removeProduct(true) }}>
+            <TouchableOpacity activeOpacity={0.6} style={{ padding: 5 }} onPress={() => { removeProduct(true) }}>
                 <Text>Remove</Text>
             </TouchableOpacity>
         </View>
